@@ -85,4 +85,3 @@ Swagger UI will be available at `/swagger` when running in Development mode.
 ## License
 
 This project is open source and available under the MIT License.
-
