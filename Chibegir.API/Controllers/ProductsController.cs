@@ -25,7 +25,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<ProductDto>> GetProductById(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<ProductDto>> GetProductById(int id, CancellationToken cancellationToken)
     {
         var product = await _productService.GetProductByIdAsync(id, cancellationToken);
         if (product == null)
@@ -34,10 +34,17 @@ public class ProductsController : ControllerBase
         return Ok(product);
     }
 
-    [HttpGet("category/{category}")]
-    public async Task<ActionResult<IEnumerable<ProductDto>>> GetProductsByCategory(string category, CancellationToken cancellationToken)
+    [HttpGet("source/{sourceId}")]
+    public async Task<ActionResult<IEnumerable<ProductDto>>> GetProductsBySourceId(int sourceId, CancellationToken cancellationToken)
     {
-        var products = await _productService.GetProductsByCategoryAsync(category, cancellationToken);
+        var products = await _productService.GetProductsBySourceIdAsync(sourceId, cancellationToken);
+        return Ok(products);
+    }
+
+    [HttpGet("available")]
+    public async Task<ActionResult<IEnumerable<ProductDto>>> GetAvailableProducts(CancellationToken cancellationToken)
+    {
+        var products = await _productService.GetAvailableProductsAsync(cancellationToken);
         return Ok(products);
     }
 
@@ -49,7 +56,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<ActionResult<ProductDto>> UpdateProduct(Guid id, [FromBody] ProductDto productDto, CancellationToken cancellationToken)
+    public async Task<ActionResult<ProductDto>> UpdateProduct(int id, [FromBody] ProductDto productDto, CancellationToken cancellationToken)
     {
         try
         {
@@ -63,7 +70,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteProduct(Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> DeleteProduct(int id, CancellationToken cancellationToken)
     {
         var deleted = await _productService.DeleteProductAsync(id, cancellationToken);
         if (!deleted)

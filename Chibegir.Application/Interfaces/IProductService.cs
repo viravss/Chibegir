@@ -4,11 +4,12 @@ namespace Chibegir.Application.Interfaces;
 
 public interface IProductService
 {
-    Task<ProductDto?> GetProductByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<ProductDto?> GetProductByIdAsync(int id, CancellationToken cancellationToken = default);
     Task<IEnumerable<ProductDto>> GetAllProductsAsync(CancellationToken cancellationToken = default);
-    Task<IEnumerable<ProductDto>> GetProductsByCategoryAsync(string category, CancellationToken cancellationToken = default);
+    Task<IEnumerable<ProductDto>> GetProductsBySourceIdAsync(int sourceId, CancellationToken cancellationToken = default);
+    Task<IEnumerable<ProductDto>> GetAvailableProductsAsync(CancellationToken cancellationToken = default);
     Task<ProductDto> CreateProductAsync(ProductDto productDto, CancellationToken cancellationToken = default);
-    Task<ProductDto> UpdateProductAsync(Guid id, ProductDto productDto, CancellationToken cancellationToken = default);
-    Task<bool> DeleteProductAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<ProductDto> UpdateProductAsync(int id, ProductDto productDto, CancellationToken cancellationToken = default);
+    Task<bool> DeleteProductAsync(int id, CancellationToken cancellationToken = default);
 }
 

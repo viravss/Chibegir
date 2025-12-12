@@ -1,20 +1,29 @@
 using Chibegir.Application.Interfaces;
-using Chibegir.Application.Services;
 using Chibegir.Domain.Entities;
 using Chibegir.Infrastructure.Data;
+using Chibegir.Infrastructure.Services;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Chibegir.Infrastructure;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddInfrastructure(this IServiceCollection services)
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        // Register repositories
-        services.AddSingleton<IRepository<Product>, InMemoryRepository<Product>>();
+        // Register DbContext
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        services.AddDbContext<ApplicationDbContext>(options =>
+            options.UseSqlServer(connectionString));
 
-        // Register application services
+        // Register repositories for int-based entities (using DbContext)
+        services.AddScoped<IRepositoryInt<Product>, RepositoryInt<Product>>();
+        services.AddScoped<IRepositoryInt<Source>, RepositoryInt<Source>>();
+
+        // Register service implementations (interfaces are defined in Application layer)
         services.AddScoped<IProductService, ProductService>();
+        services.AddScoped<ISourceService, SourceService>();
 
         return services;
     }
