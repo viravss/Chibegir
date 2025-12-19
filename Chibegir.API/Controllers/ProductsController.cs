@@ -34,12 +34,6 @@ public class ProductsController : ControllerBase
         return Ok(product);
     }
 
-    [HttpGet("source/{sourceId}")]
-    public async Task<ActionResult<IEnumerable<ProductDto>>> GetProductsBySourceId(int sourceId, CancellationToken cancellationToken)
-    {
-        var products = await _productService.GetProductsBySourceIdAsync(sourceId, cancellationToken);
-        return Ok(products);
-    }
 
     [HttpGet("available")]
     public async Task<ActionResult<IEnumerable<ProductDto>>> GetAvailableProducts(CancellationToken cancellationToken)

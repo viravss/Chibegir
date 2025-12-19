@@ -25,11 +25,11 @@ public class ProductService : IProductService
         return products.Select(MapToDto);
     }
 
-    public async Task<IEnumerable<ProductDto>> GetProductsBySourceIdAsync(int sourceId, CancellationToken cancellationToken = default)
-    {
-        var products = await _productRepository.FindAsync(p => p.SourceId == sourceId, cancellationToken);
-        return products.Select(MapToDto);
-    }
+    //public async Task<IEnumerable<ProductDto>> GetProductsBySourceIdAsync(int sourceId, CancellationToken cancellationToken = default)
+    //{
+    //    var products = await _productRepository.FindAsync(p => p.SourceId == sourceId, cancellationToken);
+    //    return products.Select(MapToDto);
+    //}
 
     public async Task<IEnumerable<ProductDto>> GetAvailableProductsAsync(CancellationToken cancellationToken = default)
     {
@@ -53,7 +53,6 @@ public class ProductService : IProductService
         existingProduct.Title = productDto.Title;
         existingProduct.LastUpdate = productDto.LastUpdate;
         existingProduct.ProductUrl = productDto.ProductUrl;
-        existingProduct.SourceId = productDto.SourceId;
         existingProduct.Html = productDto.Html;
         existingProduct.Price = productDto.Price;
         existingProduct.IsAvailable = productDto.IsAvailable;
@@ -81,7 +80,6 @@ public class ProductService : IProductService
             Title = product.Title,
             LastUpdate = product.LastUpdate,
             ProductUrl = product.ProductUrl,
-            SourceId = product.SourceId,
             Html = product.Html,
             Price = product.Price,
             IsAvailable = product.IsAvailable,
@@ -98,11 +96,9 @@ public class ProductService : IProductService
             Title = productDto.Title,
             LastUpdate = productDto.LastUpdate,
             ProductUrl = productDto.ProductUrl,
-            SourceId = productDto.SourceId,
             Html = productDto.Html,
             Price = productDto.Price,
             IsAvailable = productDto.IsAvailable
         };
     }
 }
-

@@ -12,10 +12,8 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        // Register DbContext
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
-        services.AddDbContext<ApplicationDbContext>(options =>
-            options.UseSqlServer(connectionString));
+
+        services.RegisterDbContext(configuration);
 
         // Register repositories for int-based entities (using DbContext)
         services.AddScoped<IRepositoryInt<Product>, RepositoryInt<Product>>();
@@ -26,6 +24,17 @@ public static class DependencyInjection
         services.AddScoped<ISourceService, SourceService>();
 
         return services;
+    }
+
+    private static void RegisterDbContext(this IServiceCollection services, IConfiguration configuration)
+    {
+        
+        // Register DbContext
+        var connectionString = configuration.GetConnectionString("ChiBazConnection");
+
+        services.AddDbContext<ApplicationDbContext>(
+            options => options.UseSqlServer(connectionString)
+            );
     }
 }
 
