@@ -1,4 +1,4 @@
-﻿using Chibegir.Domain.Entities;
+using Chibegir.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace Chibegir.Infrastructure.Data;
@@ -64,7 +64,26 @@ public static class DbContextConfiguration
         });
     }
 
+    public static void ProductLogConfigurations(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<ProductLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.Property(e => e.Action).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.CreatedOn).IsRequired();
 
+            entity.HasOne(e => e.Product)
+                .WithMany()
+                .HasForeignKey(e => e.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Source)
+                .WithMany()
+                .HasForeignKey(e => e.SourceId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
 
 }
 

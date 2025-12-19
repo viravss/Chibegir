@@ -7,10 +7,12 @@ namespace Chibegir.Infrastructure.Services;
 public class SourceService : ISourceService
 {
     private readonly IRepositoryInt<Source> _sourceRepository;
+    private readonly IRepositoryInt<ProductSource> _productSourceRepository;
 
-    public SourceService(IRepositoryInt<Source> sourceRepository)
+    public SourceService(IRepositoryInt<Source> sourceRepository, IRepositoryInt<ProductSource> productSourceRepository)
     {
         _sourceRepository = sourceRepository;
+        _productSourceRepository = productSourceRepository;
     }
 
     public async Task<SourceDto?> GetSourceByIdAsync(int id, CancellationToken cancellationToken = default)
@@ -35,6 +37,21 @@ public class SourceService : ISourceService
     {
         var source = MapToEntity(sourceDto);
         source = await _sourceRepository.AddAsync(source, cancellationToken);
+
+        //// Create ProductSource records if ProductIds are provided
+        //if (sourceDto.ProductIds != null && sourceDto.ProductIds.Any())
+        //{
+        //    foreach (var productId in sourceDto.ProductIds)
+        //    {
+        //        var productSource = new ProductSource
+        //        {
+        //            ProductId = productId,
+        //            SourceId = source.Id
+        //        };
+        //        await _productSourceRepository.AddAsync(productSource, cancellationToken);
+        //    }
+        //}
+
         return MapToDto(source);
     }
 
