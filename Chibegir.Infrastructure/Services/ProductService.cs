@@ -6,11 +6,11 @@ namespace Chibegir.Infrastructure.Services;
 
 public class ProductService : IProductService
 {
-    private readonly IRepositoryInt<Product> _productRepository;
-    private readonly IRepositoryInt<ProductSource> _productSourceRepository;
-    private readonly IRepositoryInt<ProductLog> _productLogRepository;
+    private readonly IProductRepository _productRepository;
+    private readonly IProductSourceRepository _productSourceRepository;
+    private readonly IProductLogRepository _productLogRepository;
 
-    public ProductService(IRepositoryInt<Product> productRepository, IRepositoryInt<ProductSource> productSourceRepository, IRepositoryInt<ProductLog> productLogRepository)
+    public ProductService(IProductRepository productRepository, IProductSourceRepository productSourceRepository, IProductLogRepository productLogRepository)
     {
         _productRepository = productRepository;
         _productSourceRepository = productSourceRepository;
@@ -19,13 +19,13 @@ public class ProductService : IProductService
 
     public async Task<ProductDto?> GetProductByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var product = await _productRepository.GetByIdAsync(id, cancellationToken);
-        return product == null ? null : MapToDto(product);
+        var product = await _productRepository.GetByIdWithSourceAsync(id, cancellationToken);
+        return product == null ? null : await MapToDtoWithSourcesAsync(product, cancellationToken);
     }
 
     public async Task<IEnumerable<ProductDto>> GetAllProductsAsync(CancellationToken cancellationToken = default)
     {
-        var products = await _productRepository.GetAllAsync(cancellationToken);
+        var products = await _productRepository.GetAllWithSourcesAsync(cancellationToken);
         return products.Select(MapToDto);
     }
 
@@ -45,7 +45,7 @@ public class ProductService : IProductService
     {
         var product = MapToEntity(productDto);
         product = await _productRepository.AddAsync(product, cancellationToken);
-        
+
         // Create ProductSource record if SourceId is provided
         if (productDto.SourceId.HasValue && productDto.SourceId.Value > 0)
         {
@@ -56,7 +56,7 @@ public class ProductService : IProductService
             };
             await _productSourceRepository.AddAsync(productSource, cancellationToken);
         }
-        
+
         // Create ProductLog for Insert action
         var productLog = new ProductLog
         {
@@ -65,7 +65,7 @@ public class ProductService : IProductService
             Action = "Insert"
         };
         await _productLogRepository.AddAsync(productLog, cancellationToken);
-        
+
         return MapToDto(product);
     }
 
@@ -84,15 +84,15 @@ public class ProductService : IProductService
         existingProduct.ModifiedOn = DateTime.UtcNow;
 
         await _productRepository.UpdateAsync(existingProduct, cancellationToken);
-        
+
         // Get SourceId from ProductSource or use from productDto
         int? sourceId = productDto.SourceId;
         if (!sourceId.HasValue)
         {
-            var productSource = (await _productSourceRepository.FindAsync(ps => ps.ProductId == id, cancellationToken)).FirstOrDefault();
-            sourceId = productSource?.SourceId;
+            var productSources = await _productSourceRepository.GetByProductIdWithRelationsAsync(id, cancellationToken);
+            sourceId = productSources.FirstOrDefault()?.SourceId;
         }
-        
+
         // Create ProductLog for Update action
         var productLog = new ProductLog
         {
@@ -101,7 +101,7 @@ public class ProductService : IProductService
             Action = "Update"
         };
         await _productLogRepository.AddAsync(productLog, cancellationToken);
-        
+
         return MapToDto(existingProduct);
     }
 
@@ -129,6 +129,34 @@ public class ProductService : IProductService
             CreatedOn = product.CreatedOn,
             ModifiedOn = product.ModifiedOn
         };
+    }
+
+    private async Task<ProductDto> MapToDtoWithSourcesAsync(Product product, CancellationToken cancellationToken = default)
+    {
+        var dto = MapToDto(product);
+        
+        // Get ProductSources with Sources for this product
+        var productSources = await _productSourceRepository.GetByProductIdWithRelationsAsync(product.Id, cancellationToken);
+        if (productSources.Any())
+        {
+            dto.Sources = productSources
+                .Where(ps => ps.Source != null)
+                .Select(ps => new SourceDto
+                {
+                    Id = ps.Source!.Id,
+                    SourceName = ps.Source.SourceName,
+                    SourceBaseAddress = ps.Source.SourceBaseAddress,
+                    IsActive = ps.Source.IsActive,
+                    CreatedOn = ps.Source.CreatedOn,
+                    ModifiedOn = ps.Source.ModifiedOn
+                })
+                .ToList();
+            
+            // Set SourceId from first source if available
+            dto.SourceId = dto.Sources.FirstOrDefault()?.Id;
+        }
+        
+        return dto;
     }
 
     private static Product MapToEntity(ProductDto productDto)

@@ -15,11 +15,16 @@ public static class DependencyInjection
 
         services.RegisterDbContext(configuration);
 
-        // Register repositories for int-based entities (using DbContext)
+        // Register generic repositories for int-based entities (using DbContext)
         services.AddScoped<IRepositoryInt<Product>, RepositoryInt<Product>>();
         services.AddScoped<IRepositoryInt<Source>, RepositoryInt<Source>>();
         services.AddScoped<IRepositoryInt<ProductSource>, RepositoryInt<ProductSource>>();
         services.AddScoped<IRepositoryInt<ProductLog>, RepositoryInt<ProductLog>>();
+
+        // Register specific repositories with Include/Join support
+        services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<IProductSourceRepository, ProductSourceRepository>();
+        services.AddScoped<IProductLogRepository, ProductLogRepository>();
 
         // Register service implementations (interfaces are defined in Application layer)
         services.AddScoped<IProductService, ProductService>();

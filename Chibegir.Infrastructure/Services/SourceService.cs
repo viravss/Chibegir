@@ -7,9 +7,9 @@ namespace Chibegir.Infrastructure.Services;
 public class SourceService : ISourceService
 {
     private readonly IRepositoryInt<Source> _sourceRepository;
-    private readonly IRepositoryInt<ProductSource> _productSourceRepository;
+    private readonly IProductSourceRepository _productSourceRepository;
 
-    public SourceService(IRepositoryInt<Source> sourceRepository, IRepositoryInt<ProductSource> productSourceRepository)
+    public SourceService(IRepositoryInt<Source> sourceRepository, IProductSourceRepository productSourceRepository)
     {
         _sourceRepository = sourceRepository;
         _productSourceRepository = productSourceRepository;
