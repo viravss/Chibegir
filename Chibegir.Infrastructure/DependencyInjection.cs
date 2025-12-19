@@ -18,10 +18,14 @@ public static class DependencyInjection
         // Register repositories for int-based entities (using DbContext)
         services.AddScoped<IRepositoryInt<Product>, RepositoryInt<Product>>();
         services.AddScoped<IRepositoryInt<Source>, RepositoryInt<Source>>();
+        services.AddScoped<IRepositoryInt<ProductSource>, RepositoryInt<ProductSource>>();
+        services.AddScoped<IRepositoryInt<ProductLog>, RepositoryInt<ProductLog>>();
 
         // Register service implementations (interfaces are defined in Application layer)
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<ISourceService, SourceService>();
+        services.AddScoped<IProductSourceService, ProductSourceService>();
+        services.AddScoped<IProductLogService, ProductLogService>();
 
         return services;
     }

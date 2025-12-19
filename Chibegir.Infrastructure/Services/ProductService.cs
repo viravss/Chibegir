@@ -7,10 +7,14 @@ namespace Chibegir.Infrastructure.Services;
 public class ProductService : IProductService
 {
     private readonly IRepositoryInt<Product> _productRepository;
+    private readonly IRepositoryInt<ProductSource> _productSourceRepository;
+    private readonly IRepositoryInt<ProductLog> _productLogRepository;
 
-    public ProductService(IRepositoryInt<Product> productRepository)
+    public ProductService(IRepositoryInt<Product> productRepository, IRepositoryInt<ProductSource> productSourceRepository, IRepositoryInt<ProductLog> productLogRepository)
     {
         _productRepository = productRepository;
+        _productSourceRepository = productSourceRepository;
+        _productLogRepository = productLogRepository;
     }
 
     public async Task<ProductDto?> GetProductByIdAsync(int id, CancellationToken cancellationToken = default)
@@ -41,6 +45,27 @@ public class ProductService : IProductService
     {
         var product = MapToEntity(productDto);
         product = await _productRepository.AddAsync(product, cancellationToken);
+        
+        // Create ProductSource record if SourceId is provided
+        if (productDto.SourceId.HasValue && productDto.SourceId.Value > 0)
+        {
+            var productSource = new ProductSource
+            {
+                ProductId = product.Id,
+                SourceId = productDto.SourceId.Value
+            };
+            await _productSourceRepository.AddAsync(productSource, cancellationToken);
+        }
+        
+        // Create ProductLog for Insert action
+        var productLog = new ProductLog
+        {
+            ProductId = product.Id,
+            SourceId = productDto.SourceId,
+            Action = "Insert"
+        };
+        await _productLogRepository.AddAsync(productLog, cancellationToken);
+        
         return MapToDto(product);
     }
 
@@ -59,6 +84,24 @@ public class ProductService : IProductService
         existingProduct.ModifiedOn = DateTime.UtcNow;
 
         await _productRepository.UpdateAsync(existingProduct, cancellationToken);
+        
+        // Get SourceId from ProductSource or use from productDto
+        int? sourceId = productDto.SourceId;
+        if (!sourceId.HasValue)
+        {
+            var productSource = (await _productSourceRepository.FindAsync(ps => ps.ProductId == id, cancellationToken)).FirstOrDefault();
+            sourceId = productSource?.SourceId;
+        }
+        
+        // Create ProductLog for Update action
+        var productLog = new ProductLog
+        {
+            ProductId = existingProduct.Id,
+            SourceId = sourceId,
+            Action = "Update"
+        };
+        await _productLogRepository.AddAsync(productLog, cancellationToken);
+        
         return MapToDto(existingProduct);
     }
 
