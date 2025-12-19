@@ -6,34 +6,34 @@ namespace Chibegir.Infrastructure.Services;
 
 public class ProductSourceService : IProductSourceService
 {
-    private readonly IRepositoryInt<ProductSource> _productSourceRepository;
+    private readonly IProductSourceRepository _productSourceRepository;
 
-    public ProductSourceService(IRepositoryInt<ProductSource> productSourceRepository)
+    public ProductSourceService(IProductSourceRepository productSourceRepository)
     {
         _productSourceRepository = productSourceRepository;
     }
 
     public async Task<ProductSourceDto?> GetProductSourceByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var productSource = await _productSourceRepository.GetByIdAsync(id, cancellationToken);
+        var productSource = await _productSourceRepository.GetByIdWithRelationsAsync(id, cancellationToken);
         return productSource == null ? null : MapToDto(productSource);
     }
 
     public async Task<IEnumerable<ProductSourceDto>> GetAllProductSourcesAsync(CancellationToken cancellationToken = default)
     {
-        var productSources = await _productSourceRepository.GetAllAsync(cancellationToken);
+        var productSources = await _productSourceRepository.GetAllWithRelationsAsync(cancellationToken);
         return productSources.Select(MapToDto);
     }
 
     public async Task<IEnumerable<ProductSourceDto>> GetProductSourcesByProductIdAsync(int productId, CancellationToken cancellationToken = default)
     {
-        var productSources = await _productSourceRepository.FindAsync(ps => ps.ProductId == productId, cancellationToken);
+        var productSources = await _productSourceRepository.GetByProductIdWithRelationsAsync(productId, cancellationToken);
         return productSources.Select(MapToDto);
     }
 
     public async Task<IEnumerable<ProductSourceDto>> GetProductSourcesBySourceIdAsync(int sourceId, CancellationToken cancellationToken = default)
     {
-        var productSources = await _productSourceRepository.FindAsync(ps => ps.SourceId == sourceId, cancellationToken);
+        var productSources = await _productSourceRepository.GetBySourceIdWithRelationsAsync(sourceId, cancellationToken);
         return productSources.Select(MapToDto);
     }
 
@@ -70,7 +70,7 @@ public class ProductSourceService : IProductSourceService
 
     private static ProductSourceDto MapToDto(ProductSource productSource)
     {
-        return new ProductSourceDto
+        var dto = new ProductSourceDto
         {
             Id = productSource.Id,
             ProductId = productSource.ProductId,
@@ -78,6 +78,39 @@ public class ProductSourceService : IProductSourceService
             CreatedOn = productSource.CreatedOn,
             ModifiedOn = productSource.ModifiedOn
         };
+
+        // Map included Product if available
+        if (productSource.Product != null)
+        {
+            dto.Product = new ProductDto
+            {
+                Id = productSource.Product.Id,
+                Title = productSource.Product.Title,
+                LastUpdate = productSource.Product.LastUpdate,
+                ProductUrl = productSource.Product.ProductUrl,
+                Html = productSource.Product.Html,
+                Price = productSource.Product.Price,
+                IsAvailable = productSource.Product.IsAvailable,
+                CreatedOn = productSource.Product.CreatedOn,
+                ModifiedOn = productSource.Product.ModifiedOn
+            };
+        }
+
+        // Map included Source if available
+        if (productSource.Source != null)
+        {
+            dto.Source = new SourceDto
+            {
+                Id = productSource.Source.Id,
+                SourceName = productSource.Source.SourceName,
+                SourceBaseAddress = productSource.Source.SourceBaseAddress,
+                IsActive = productSource.Source.IsActive,
+                CreatedOn = productSource.Source.CreatedOn,
+                ModifiedOn = productSource.Source.ModifiedOn
+            };
+        }
+
+        return dto;
     }
 
     private static ProductSource MapToEntity(ProductSourceDto productSourceDto)

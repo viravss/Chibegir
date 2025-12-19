@@ -6,34 +6,34 @@ namespace Chibegir.Infrastructure.Services;
 
 public class ProductLogService : IProductLogService
 {
-    private readonly IRepositoryInt<ProductLog> _productLogRepository;
+    private readonly IProductLogRepository _productLogRepository;
 
-    public ProductLogService(IRepositoryInt<ProductLog> productLogRepository)
+    public ProductLogService(IProductLogRepository productLogRepository)
     {
         _productLogRepository = productLogRepository;
     }
 
     public async Task<ProductLogDto?> GetProductLogByIdAsync(int id, CancellationToken cancellationToken = default)
     {
-        var productLog = await _productLogRepository.GetByIdAsync(id, cancellationToken);
+        var productLog = await _productLogRepository.GetByIdWithRelationsAsync(id, cancellationToken);
         return productLog == null ? null : MapToDto(productLog);
     }
 
     public async Task<IEnumerable<ProductLogDto>> GetAllProductLogsAsync(CancellationToken cancellationToken = default)
     {
-        var productLogs = await _productLogRepository.GetAllAsync(cancellationToken);
+        var productLogs = await _productLogRepository.GetAllWithRelationsAsync(cancellationToken);
         return productLogs.Select(MapToDto);
     }
 
     public async Task<IEnumerable<ProductLogDto>> GetProductLogsByProductIdAsync(int productId, CancellationToken cancellationToken = default)
     {
-        var productLogs = await _productLogRepository.FindAsync(pl => pl.ProductId == productId, cancellationToken);
+        var productLogs = await _productLogRepository.GetByProductIdWithRelationsAsync(productId, cancellationToken);
         return productLogs.Select(MapToDto);
     }
 
     public async Task<IEnumerable<ProductLogDto>> GetProductLogsBySourceIdAsync(int sourceId, CancellationToken cancellationToken = default)
     {
-        var productLogs = await _productLogRepository.FindAsync(pl => pl.SourceId == sourceId, cancellationToken);
+        var productLogs = await _productLogRepository.GetBySourceIdWithRelationsAsync(sourceId, cancellationToken);
         return productLogs.Select(MapToDto);
     }
 
@@ -46,7 +46,7 @@ public class ProductLogService : IProductLogService
 
     private static ProductLogDto MapToDto(ProductLog productLog)
     {
-        return new ProductLogDto
+        var dto = new ProductLogDto
         {
             Id = productLog.Id,
             ProductId = productLog.ProductId,
@@ -55,6 +55,39 @@ public class ProductLogService : IProductLogService
             CreatedOn = productLog.CreatedOn,
             ModifiedOn = productLog.ModifiedOn
         };
+
+        // Map included Product if available
+        if (productLog.Product != null)
+        {
+            dto.Product = new ProductDto
+            {
+                Id = productLog.Product.Id,
+                Title = productLog.Product.Title,
+                LastUpdate = productLog.Product.LastUpdate,
+                ProductUrl = productLog.Product.ProductUrl,
+                Html = productLog.Product.Html,
+                Price = productLog.Product.Price,
+                IsAvailable = productLog.Product.IsAvailable,
+                CreatedOn = productLog.Product.CreatedOn,
+                ModifiedOn = productLog.Product.ModifiedOn
+            };
+        }
+
+        // Map included Source if available
+        if (productLog.Source != null)
+        {
+            dto.Source = new SourceDto
+            {
+                Id = productLog.Source.Id,
+                SourceName = productLog.Source.SourceName,
+                SourceBaseAddress = productLog.Source.SourceBaseAddress,
+                IsActive = productLog.Source.IsActive,
+                CreatedOn = productLog.Source.CreatedOn,
+                ModifiedOn = productLog.Source.ModifiedOn
+            };
+        }
+
+        return dto;
     }
 
     private static ProductLog MapToEntity(ProductLogDto productLogDto)

@@ -10,6 +10,7 @@ public class ProductDto
     public decimal Price { get; set; }
     public bool IsAvailable { get; set; }
     public int? SourceId { get; set; }
+    public List<SourceDto>? Sources { get; set; }
     public DateTime CreatedOn { get; set; }
     public DateTime? ModifiedOn { get; set; }
 }
