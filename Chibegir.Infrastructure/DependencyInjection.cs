@@ -31,6 +31,7 @@ public static class DependencyInjection
         services.AddScoped<ISourceService, SourceService>();
         services.AddScoped<IProductSourceService, ProductSourceService>();
         services.AddScoped<IProductLogService, ProductLogService>();
+            services.AddScoped<IMongoProductService, MongoProductService>();
 
         return services;
     }
