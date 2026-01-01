@@ -1,6 +1,9 @@
-using Chibegir.Application.DTOs;
+﻿using Chibegir.Application.DTOs;
 using Chibegir.Application.Interfaces;
 using Chibegir.Domain.Entities;
+using Microsoft.Playwright;
+using System.Net;
+using System.Text.RegularExpressions;
 
 namespace Chibegir.Infrastructure.Services;
 
@@ -9,12 +12,13 @@ public class ProductService : IProductService
     private readonly IProductRepository _productRepository;
     private readonly IProductSourceRepository _productSourceRepository;
     private readonly IProductLogRepository _productLogRepository;
-
-    public ProductService(IProductRepository productRepository, IProductSourceRepository productSourceRepository, IProductLogRepository productLogRepository)
+    private readonly HttpClient _httpClient;
+    public ProductService(IProductRepository productRepository, IProductSourceRepository productSourceRepository, IProductLogRepository productLogRepository, HttpClient httpClient)
     {
         _productRepository = productRepository;
         _productSourceRepository = productSourceRepository;
         _productLogRepository = productLogRepository;
+        _httpClient = httpClient;
     }
 
     public async Task<ProductDto?> GetProductByIdAsync(int id, CancellationToken cancellationToken = default)
@@ -68,6 +72,16 @@ public class ProductService : IProductService
 
         return MapToDto(product);
     }
+
+
+    public async Task<ProductDto> CreateProductWithHtmlAsync(ProductDto productDto, CancellationToken cancellationToken = default)
+    {
+        var html = await GetHtmlFromUrlAsync(productDto.ProductUrl);
+        productDto.Html = await CleanMyHtml(html);
+        var product = await CreateProductAsync(productDto, cancellationToken);
+        return product;
+    }
+
 
     public async Task<ProductDto> UpdateProductAsync(int id, ProductDto productDto, CancellationToken cancellationToken = default)
     {
@@ -134,7 +148,7 @@ public class ProductService : IProductService
     private async Task<ProductDto> MapToDtoWithSourcesAsync(Product product, CancellationToken cancellationToken = default)
     {
         var dto = MapToDto(product);
-        
+
         // Get ProductSources with Sources for this product
         var productSources = await _productSourceRepository.GetByProductIdWithRelationsAsync(product.Id, cancellationToken);
         if (productSources.Any())
@@ -151,11 +165,11 @@ public class ProductService : IProductService
                     ModifiedOn = ps.Source.ModifiedOn
                 })
                 .ToList();
-            
+
             // Set SourceId from first source if available
             dto.SourceId = dto.Sources.FirstOrDefault()?.Id;
         }
-        
+
         return dto;
     }
 
@@ -172,4 +186,110 @@ public class ProductService : IProductService
             IsAvailable = productDto.IsAvailable
         };
     }
+
+    private async Task<string> GetHtmlFromUrlAsync(string url)
+    {
+        var html = await GetHtmlByHttpClient(url);
+        if (html.Contains("application/ld+json"))
+        {
+            return html;
+        }
+        html = await GetHtmlByPlayWrite(url);
+
+        return html;
+    }
+
+
+    private async Task<string> GetHtmlByHttpClient(string url)
+    {
+        _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+        );
+
+        _httpClient.DefaultRequestHeaders.AcceptLanguage.ParseAdd("fa-IR,fa;q=0.9");
+
+        var html = await _httpClient.GetStringAsync(new Uri(url));
+        return html;
+    }
+    private async Task<string> GetHtmlByPlayWrite(string url)
+    {
+        using var playwright = await Playwright.CreateAsync();
+        await using var browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
+        {
+            Headless = true
+        });
+
+        var page = await browser.NewPageAsync();
+        await page.GotoAsync(url, new PageGotoOptions
+        {
+            WaitUntil = WaitUntilState.NetworkIdle,
+
+        });
+
+        await page.WaitForTimeoutAsync(3000);
+
+        // HTML
+        return await page.ContentAsync();
+    }
+
+    //private async Task<string> CleanMyHtml(string html)
+    //{
+    //    html = Regex.Replace(html, "<script.*?</script>", "", RegexOptions.Singleline | RegexOptions.IgnoreCase);
+    //    html = Regex.Replace(html, "<style.*?</style>", "", RegexOptions.Singleline | RegexOptions.IgnoreCase);
+    //    html = Regex.Replace(html, "<link.*?rel=[\"']stylesheet[\"'].*?>", "", RegexOptions.IgnoreCase);
+    //    html = Regex.Replace(html, "<symbol.*?</symbol>", "", RegexOptions.Singleline | RegexOptions.IgnoreCase);
+    //    html = Regex.Replace(html, "<svg.*?</svg>", "", RegexOptions.Singleline | RegexOptions.IgnoreCase);
+
+    //    return html;
+    //}
+
+    private async Task<string> CleanMyHtml(string html)
+    {
+        if (string.IsNullOrEmpty(html))
+            return string.Empty;
+
+        html = Regex.Replace(html, "<!--.*?-->", "", RegexOptions.Singleline | RegexOptions.IgnoreCase);
+
+        html = Regex.Replace(html, "<script.*?</script>", "", RegexOptions.Singleline | RegexOptions.IgnoreCase);
+
+        html = Regex.Replace(html, "<style.*?</style>", "", RegexOptions.Singleline | RegexOptions.IgnoreCase);
+
+        html = Regex.Replace(html, "<link.*?rel=[\"']stylesheet[\"'].*?>", "", RegexOptions.IgnoreCase);
+
+        html = Regex.Replace(html, "<symbol.*?</symbol>", "", RegexOptions.Singleline | RegexOptions.IgnoreCase);
+
+        html = Regex.Replace(html, "<svg.*?</svg>", "", RegexOptions.Singleline | RegexOptions.IgnoreCase);
+
+        html = Regex.Replace(html, "<iframe.*?</iframe>", "", RegexOptions.Singleline | RegexOptions.IgnoreCase);
+
+        html = Regex.Replace(html, "<noscript.*?</noscript>", "", RegexOptions.Singleline | RegexOptions.IgnoreCase);
+
+        html = Regex.Replace(html, "<meta.*?>", "", RegexOptions.IgnoreCase);
+
+        html = Regex.Replace(html, "data:image/.*?;base64,[^\"]*", "", RegexOptions.IgnoreCase);
+
+        html = Regex.Replace(html, "<img.*?>", "", RegexOptions.Singleline | RegexOptions.IgnoreCase);
+
+        html = Regex.Replace(html, @"\s{2,}", " ");
+        html = Regex.Replace(html, @"\n{2,}", "\n");
+
+        html = Regex.Replace(html, "<head.*?</head>", "", RegexOptions.Singleline | RegexOptions.IgnoreCase);
+
+        html = Regex.Replace(html, "<link.*?>", "", RegexOptions.Singleline | RegexOptions.IgnoreCase);
+        html = Regex.Replace(html, "\\s*style\\s*=\\s*\"[^\"]*\"", "", RegexOptions.IgnoreCase);
+
+        html = Regex.Replace(html, "<picture.*?</picture>", "", RegexOptions.Singleline | RegexOptions.IgnoreCase);
+
+        html = Regex.Replace(html, "<footer.*?</footer>", "", RegexOptions.Singleline | RegexOptions.IgnoreCase);
+
+
+
+        return html.Trim();
+    }
+
+
+
+
+
+
 }
