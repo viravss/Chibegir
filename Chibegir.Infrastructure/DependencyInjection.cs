@@ -20,6 +20,7 @@ public static class DependencyInjection
         services.AddScoped<IRepositoryInt<Source>, RepositoryInt<Source>>();
         services.AddScoped<IRepositoryInt<ProductSource>, RepositoryInt<ProductSource>>();
         services.AddScoped<IRepositoryInt<ProductLog>, RepositoryInt<ProductLog>>();
+        services.AddScoped<IRepositoryInt<Category>, RepositoryInt<Category>>();
 
         // Register specific repositories with Include/Join support
         services.AddScoped<IProductRepository, ProductRepository>();

@@ -19,6 +19,12 @@ public static class DbContextConfiguration
             entity.Property(e => e.LastUpdate).IsRequired();
             entity.Property(e => e.CreatedOn).IsRequired();
 
+            // Configure relationship with Category
+            entity.HasOne(e => e.Category)
+                .WithMany(c => c.Products)
+                .HasForeignKey(e => e.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             //// Configure relationship with Source
             //entity.HasOne(e => e.Source)
             //    .WithMany()
@@ -82,6 +88,19 @@ public static class DbContextConfiguration
                 .WithMany()
                 .HasForeignKey(e => e.SourceId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+
+    public static void CategoryConfigurations(ModelBuilder modelBuilder)
+    {
+        // Configure Category entity
+        modelBuilder.Entity<Category>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.Property(e => e.Name).HasMaxLength(250).IsRequired();
+            entity.Property(e => e.Description).HasMaxLength(1000);
+            entity.Property(e => e.CreatedOn).IsRequired();
         });
     }
 

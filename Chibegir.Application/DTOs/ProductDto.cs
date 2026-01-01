@@ -9,6 +9,8 @@ public class ProductDto
     public string Html { get; set; } = string.Empty;
     public decimal Price { get; set; }
     public bool IsAvailable { get; set; }
+    public int CategoryId { get; set; }
+    public CategoryDto? Category { get; set; }
     public int? SourceId { get; set; }
     public List<SourceDto>? Sources { get; set; }
     public DateTime CreatedOn { get; set; }

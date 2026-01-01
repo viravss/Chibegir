@@ -15,8 +15,9 @@ public class ProductRepository : RepositoryInt<Product>, IProductRepository
 
     public async Task<Product?> GetByIdWithSourceAsync(int id, CancellationToken cancellationToken = default)
     {
-        // Get product and manually load related ProductSource with Source
+        // Get product and manually load related ProductSource with Source and Category
         var product = await _context.Product
+            .Include(p => p.Category)
             .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
 
         if (product != null)
@@ -33,8 +34,10 @@ public class ProductRepository : RepositoryInt<Product>, IProductRepository
 
     public async Task<IEnumerable<Product>> GetAllWithSourcesAsync(CancellationToken cancellationToken = default)
     {
-        // Get all products - you can extend this to include related data via joins if needed
-        var products = await _context.Product.ToListAsync(cancellationToken);
+        // Get all products with Category
+        var products = await _context.Product
+            .Include(p => p.Category)
+            .ToListAsync(cancellationToken);
 
         // Optionally load ProductSource for all products
         var productIds = products.Select(p => p.Id).ToList();
@@ -48,8 +51,9 @@ public class ProductRepository : RepositoryInt<Product>, IProductRepository
 
     public async Task<IEnumerable<Product>> GetAvailableWithSourcesAsync(CancellationToken cancellationToken = default)
     {
-        // Get available products - you can extend this to include related data via joins if needed
+        // Get available products with Category
         var products = await _context.Product
+            .Include(p => p.Category)
             .Where(p => p.IsAvailable)
             .ToListAsync(cancellationToken);
 

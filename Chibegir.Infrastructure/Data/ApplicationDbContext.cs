@@ -13,6 +13,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<ProductSource> ProductSource { get; set; }
     public DbSet<Source> Source { get; set; }
     public DbSet<ProductLog> ProductLog { get; set; }
+    public DbSet<Category> Category { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -22,5 +23,6 @@ public class ApplicationDbContext : DbContext
         DbContextConfiguration.SourceConfigurations(modelBuilder);
         DbContextConfiguration.ProductSourceConfigurations(modelBuilder);
         DbContextConfiguration.ProductLogConfigurations(modelBuilder);
+        DbContextConfiguration.CategoryConfigurations(modelBuilder);
     }
 }
