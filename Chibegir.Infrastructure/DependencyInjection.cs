@@ -31,14 +31,16 @@ public static class DependencyInjection
         services.AddScoped<ISourceService, SourceService>();
         services.AddScoped<IProductSourceService, ProductSourceService>();
         services.AddScoped<IProductLogService, ProductLogService>();
-            services.AddScoped<IMongoProductService, MongoProductService>();
+        services.AddScoped<IMongoProductService, MongoProductService>();
+
+        services.AddHttpClient();
 
         return services;
     }
 
     private static void RegisterDbContext(this IServiceCollection services, IConfiguration configuration)
     {
-        
+
         // Register DbContext
         var connectionString = configuration.GetConnectionString("ChiBazConnection");
 

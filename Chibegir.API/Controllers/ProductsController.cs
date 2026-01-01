@@ -49,6 +49,13 @@ public class ProductsController : ControllerBase
         return CreatedAtAction(nameof(GetProductById), new { id = createdProduct.Id }, createdProduct);
     }
 
+    [HttpPost("CreateProductWithHtmlAsync")]
+    public async Task<ActionResult<ProductDto>> CreateProductWithHtmlAsync([FromBody] ProductDto productDto, CancellationToken cancellationToken)
+    {
+        var createdProduct = await _productService.CreateProductWithHtmlAsync(productDto, cancellationToken);
+        return CreatedAtAction(nameof(GetProductById), new { id = createdProduct.Id }, createdProduct);
+    }
+
     [HttpPut("{id}")]
     public async Task<ActionResult<ProductDto>> UpdateProduct(int id, [FromBody] ProductDto productDto, CancellationToken cancellationToken)
     {
