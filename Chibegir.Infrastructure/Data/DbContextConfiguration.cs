@@ -104,5 +104,46 @@ public static class DbContextConfiguration
         });
     }
 
+    public static void AttributeConfigurations(ModelBuilder modelBuilder)
+    {
+        // Configure Attribute entity
+        modelBuilder.Entity<Domain.Entities.Attribute>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.Property(e => e.AttributeKey).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.Label).HasMaxLength(200).IsRequired();
+            entity.Property(e => e.AttributeType).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.Unit).HasMaxLength(100);
+            entity.Property(e => e.CreatedOn).IsRequired();
+        });
+    }
+
+    public static void CategoryAttributeConfigurations(ModelBuilder modelBuilder)
+    {
+        // Configure CategoryAttribute entity (join table)
+        modelBuilder.Entity<CategoryAttribute>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.Property(e => e.CreatedOn).IsRequired();
+
+            // Configure relationship with Category
+            entity.HasOne(e => e.Category)
+                .WithMany()
+                .HasForeignKey(e => e.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure relationship with Attribute
+            entity.HasOne(e => e.Attribute)
+                .WithMany()
+                .HasForeignKey(e => e.AttributeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Add unique constraint to prevent duplicate Category-Attribute pairs
+            entity.HasIndex(e => new { e.CategoryId, e.AttributeId }).IsUnique();
+        });
+    }
+
 }
 

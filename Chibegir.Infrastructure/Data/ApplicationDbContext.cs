@@ -14,6 +14,8 @@ public class ApplicationDbContext : DbContext
     public DbSet<Source> Source { get; set; }
     public DbSet<ProductLog> ProductLog { get; set; }
     public DbSet<Category> Category { get; set; }
+    public DbSet<Domain.Entities.Attribute> Attribute { get; set; }
+    public DbSet<CategoryAttribute> CategoryAttribute { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -24,5 +26,7 @@ public class ApplicationDbContext : DbContext
         DbContextConfiguration.ProductSourceConfigurations(modelBuilder);
         DbContextConfiguration.ProductLogConfigurations(modelBuilder);
         DbContextConfiguration.CategoryConfigurations(modelBuilder);
+        DbContextConfiguration.AttributeConfigurations(modelBuilder);
+        DbContextConfiguration.CategoryAttributeConfigurations(modelBuilder);
     }
 }

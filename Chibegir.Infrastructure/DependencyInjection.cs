@@ -21,11 +21,14 @@ public static class DependencyInjection
         services.AddScoped<IRepositoryInt<ProductSource>, RepositoryInt<ProductSource>>();
         services.AddScoped<IRepositoryInt<ProductLog>, RepositoryInt<ProductLog>>();
         services.AddScoped<IRepositoryInt<Category>, RepositoryInt<Category>>();
+        services.AddScoped<IRepositoryInt<Domain.Entities.Attribute>, RepositoryInt<Domain.Entities.Attribute>>();
+        services.AddScoped<IRepositoryInt<CategoryAttribute>, RepositoryInt<CategoryAttribute>>();
 
         // Register specific repositories with Include/Join support
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<IProductSourceRepository, ProductSourceRepository>();
         services.AddScoped<IProductLogRepository, ProductLogRepository>();
+        services.AddScoped<ICategoryAttributeRepository, CategoryAttributeRepository>();
 
         // Register service implementations (interfaces are defined in Application layer)
         services.AddScoped<IProductService, ProductService>();
@@ -33,6 +36,9 @@ public static class DependencyInjection
         services.AddScoped<IProductSourceService, ProductSourceService>();
         services.AddScoped<IProductLogService, ProductLogService>();
         services.AddScoped<IMongoProductService, MongoProductService>();
+        services.AddScoped<IAttributeService, AttributeService>();
+        services.AddScoped<ICategoryAttributeService, CategoryAttributeService>();
+        services.AddScoped<ICategoryService, CategoryService>();
 
         services.AddHttpClient();
 
