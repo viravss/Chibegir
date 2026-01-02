@@ -16,7 +16,7 @@ public static class DbContextConfiguration
             entity.Property(e => e.ProductUrl).HasMaxLength(500).IsRequired();
             entity.Property(e => e.Html).HasColumnType("nvarchar(max)");
             entity.Property(e => e.Price).HasColumnType("decimal(18,2)");
-            entity.Property(e => e.LastUpdate).IsRequired();
+            entity.Property(e => e.LastUpdate);
             entity.Property(e => e.CreatedOn).IsRequired();
 
             // Configure relationship with Category
