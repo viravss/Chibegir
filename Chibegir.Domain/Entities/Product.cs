@@ -1,5 +1,6 @@
-using System.ComponentModel.DataAnnotations;
 using Chibegir.Domain.Common;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Chibegir.Domain.Entities;
 
@@ -20,6 +21,11 @@ public class Product : BaseEntityInt
     public decimal Price { get; set; }
 
     public bool IsAvailable { get; set; } = true;
+
+    [ForeignKey("CategoryId")]
+    public int CategoryId { get; set; }
+    public virtual Category Category { get; set; }
+
 
     //// Navigation property
     //public Source? Source { get; set; }

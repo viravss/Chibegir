@@ -41,7 +41,7 @@ public class ProductService : IProductService
 
     public async Task<IEnumerable<ProductDto>> GetAvailableProductsAsync(CancellationToken cancellationToken = default)
     {
-        var products = await _productRepository.FindAsync(p => p.IsAvailable, cancellationToken);
+        var products = await _productRepository.GetAvailableWithSourcesAsync(cancellationToken);
         return products.Select(MapToDto);
     }
 
@@ -95,6 +95,7 @@ public class ProductService : IProductService
         existingProduct.Html = productDto.Html;
         existingProduct.Price = productDto.Price;
         existingProduct.IsAvailable = productDto.IsAvailable;
+        existingProduct.CategoryId = productDto.CategoryId;
         existingProduct.ModifiedOn = DateTime.UtcNow;
 
         await _productRepository.UpdateAsync(existingProduct, cancellationToken);
@@ -140,6 +141,16 @@ public class ProductService : IProductService
             Html = product.Html,
             Price = product.Price,
             IsAvailable = product.IsAvailable,
+            CategoryId = product.CategoryId,
+            Category = product.Category != null ? new CategoryDto
+            {
+                Id = product.Category.Id,
+                Name = product.Category.Name,
+                Description = product.Category.Description,
+                IsActive = product.Category.IsActive,
+                CreatedOn = product.Category.CreatedOn,
+                ModifiedOn = product.Category.ModifiedOn
+            } : null,
             CreatedOn = product.CreatedOn,
             ModifiedOn = product.ModifiedOn
         };
@@ -183,7 +194,8 @@ public class ProductService : IProductService
             ProductUrl = productDto.ProductUrl,
             Html = productDto.Html,
             Price = productDto.Price,
-            IsAvailable = productDto.IsAvailable
+            IsAvailable = productDto.IsAvailable,
+            CategoryId = productDto.CategoryId
         };
     }
 
