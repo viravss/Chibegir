@@ -11,10 +11,13 @@ public class ProductsController : ControllerBase
     private readonly IProductService _productService;
     private readonly ILogger<ProductsController> _logger;
 
-    public ProductsController(IProductService productService, ILogger<ProductsController> logger)
+    private readonly IProductExtractorService _productExtractorService;
+
+    public ProductsController(IProductService productService, ILogger<ProductsController> logger, IProductExtractorService productExtractorService)
     {
         _productService = productService;
         _logger = logger;
+        _productExtractorService = productExtractorService;
     }
 
     [HttpGet]
@@ -79,5 +82,18 @@ public class ProductsController : ControllerBase
 
         return NoContent();
     }
+
+
+    [HttpGet("callAI/{productId}")]
+    public async Task<IActionResult> CallAI(int productId)
+    {
+
+        var result = await _productExtractorService.ExtractProductWithAiAsync(productId);
+
+        return Ok(result);
+    }
+
+
+
 }
 

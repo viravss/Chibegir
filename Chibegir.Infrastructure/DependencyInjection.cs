@@ -1,3 +1,4 @@
+using Chibegir.Application.DTOs.AI;
 using Chibegir.Application.Interfaces;
 using Chibegir.Domain.Entities;
 using Chibegir.Infrastructure.Data;
@@ -5,6 +6,7 @@ using Chibegir.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace Chibegir.Infrastructure;
 
@@ -36,6 +38,9 @@ public static class DependencyInjection
         services.AddScoped<IProductSourceService, ProductSourceService>();
         services.AddScoped<IProductLogService, ProductLogService>();
         services.AddScoped<IMongoProductService, MongoProductService>();
+
+        services.ProductExtractorService(configuration);
+
         services.AddScoped<IAttributeService, AttributeService>();
         services.AddScoped<ICategoryAttributeService, CategoryAttributeService>();
         services.AddScoped<ICategoryService, CategoryService>();
@@ -54,6 +59,31 @@ public static class DependencyInjection
         services.AddDbContext<ApplicationDbContext>(
             options => options.UseSqlServer(connectionString)
             );
+    }
+
+
+
+    private static void ProductExtractorService(this IServiceCollection services, IConfiguration configuration)
+    {
+
+        services.Configure<OpenAISetting>(configuration.GetSection("OpenAI"));
+
+        //// Register OpenAiRestSharpService
+        //services.AddSingleton<OpenAiRestSharpService>(sp =>
+        //{
+        //    var settings = sp.GetRequiredService<IOptions<OpenAiSettings>>().Value;
+        //    return new OpenAiRestSharpService(
+        //        apiKey: settings.ApiKey,
+        //        proxyUrl: settings.BaseUrl,
+        //        defaultModel: settings.Model
+        //    );
+        //});
+
+        // Register ProductExtractorService
+        services.AddScoped<IProductExtractorService, ProductExtractorService>();
+
+
+        //services.AddScoped<IProductExtractorService, ProductExtractorService>();
     }
 }
 
